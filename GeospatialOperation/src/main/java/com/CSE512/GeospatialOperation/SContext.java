@@ -6,9 +6,9 @@ import org.apache.spark.api.java.JavaSparkContext;
 public class SContext {
 
 	public static volatile JavaSparkContext sc;
-	public static final String JAR = "/home/kulvir/Downloads/sparktest.jar"; 
-	public static final String APP = "GeoSpatialOperations";
-	public static final String MASTER = "spark://192.168.0.226:7077";
+	static final String JAR = "/home/kulvir/Downloads/sparktest.jar"; 
+	static final String APP = "GeoSpatialOperations";
+	static final String MASTER = "spark://192.168.0.226:7077";
 
 	public static synchronized JavaSparkContext getJavaSparkContext() {
 		
