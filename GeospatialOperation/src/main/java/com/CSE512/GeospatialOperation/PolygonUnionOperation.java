@@ -105,11 +105,12 @@ class GlobalUnionOperation implements Serializable,FlatMapFunction<Iterator<Geom
 public class PolygonUnionOperation {
 	
 	
-	static void main(String args[]){
+	public static void main(String args[]){
 		
 		SparkConf configuration = new SparkConf().setAppName("Geospatial Application").setMaster(args[0]);    
+		configuration.setJars(new String[]{"/home/kulvir/Downloads/sparktest.jar","/home/kulvir/Downloads/jts-1.13.jar"});
 		JavaSparkContext javasc = new JavaSparkContext(configuration);
-	    
+		javasc.addJar("/home/kulvir/Downloads/sparktest.jar");
 		//Read a text file from HDFS and return it as an RDD of Strings.
 		JavaRDD<String> inputFile1 = javasc.textFile(args[1]);
 		JavaRDD<Geometry> localUnionPolygon = inputFile1.mapPartitions(new LocalUnionOperation());
