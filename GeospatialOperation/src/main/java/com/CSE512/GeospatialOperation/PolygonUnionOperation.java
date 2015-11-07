@@ -74,6 +74,7 @@ class LocalUnionOperation implements Serializable,FlatMapFunction<Iterator<Strin
 
 class GlobalUnionOperation implements Serializable,FlatMapFunction<Iterator<Geometry>, Geometry> 
 {
+	
 	private static final long serialVersionUID = 1L;
 
 	public Iterable<Geometry> call(Iterator<Geometry> globalUnionData)
