@@ -106,7 +106,7 @@ class GlobalUnionOperation implements Serializable,FlatMapFunction<Iterator<Geom
 public class PolygonUnionOperation {
 	
 	
-	static void main(String args[]){
+	public static void main(String args[]){
 		
 		SparkConf configuration = new SparkConf().setAppName("Geospatial Application").setMaster(args[0]);    
 		JavaSparkContext javasc = new JavaSparkContext(configuration);
