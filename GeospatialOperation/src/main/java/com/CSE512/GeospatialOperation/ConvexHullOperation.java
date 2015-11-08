@@ -76,7 +76,7 @@ public class ConvexHullOperation {
 	public static void main(String args[]) {
 		String InputLocation = "hdfs://master:54310/data/ConvexHullTestData.csv";
 		String OutputLocation = "hdfs://master:54310/data/ConvexHull";
-		System.out.println("convex hull starting");
+		System.out.println("convex hull starting.");
 		JavaSparkContext sc = SContext.getJavaSparkContext();
 
 		JavaRDD<String> file = sc.textFile(InputLocation);
