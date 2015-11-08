@@ -1,7 +1,14 @@
 package com.CSE512.GeospatialOperation;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -20,12 +27,12 @@ import com.vividsolutions.jts.operation.union.CascadedPolygonUnion;
 public class PolygonUnionOperation {
 	
 	
-	public static void main(String args[]){
+	public static void main(String args[]) throws IOException{
 		
 		String InputLocation = "hdfs://master:54310/data/PolygonUnionTestData.csv";
 		String OutputLocation = "hdfs://master:54310/data/PolygonUnion";
 		String localIntermediateFile = "hdfs://master:54310/data/PolygonUnionIntermediateFile";
-		JavaSparkContext sc = SContext.getJavaSparkContext();
+	JavaSparkContext sc = SContext.getJavaSparkContext();
 
 		//Read a text file from HDFS and return it as an RDD of Strings.
 		JavaRDD<String> inputFile1 = sc.textFile(InputLocation);
@@ -36,10 +43,55 @@ public class PolygonUnionOperation {
 		//Return a new RDD that has exactly 1 partition.
 		JavaRDD<Geometry> partionList = localUnionPolygon.repartition(1);
 		JavaRDD<Geometry> globalUnionPolygon = partionList.mapPartitions(new GlobalUnionOperation());
-	
-		globalUnionPolygon.saveAsTextFile(OutputLocation);
+		List<Geometry> globalUnionPolygonList = globalUnionPolygon.collect();
+		List<Points> globalUnionPolygonPointsList = new ArrayList<Points>();
+		for(int i = 0; i < globalUnionPolygonList.size(); i++) {
+			globalUnionPolygonPointsList.addAll(Points.getPoints(Arrays.asList(globalUnionPolygonList.get(0).getCoordinates())));
+		}
+		JavaRDD<Points> globalUnionPolygonPoints = sc.parallelize(globalUnionPolygonPointsList).repartition(1);
+		globalUnionPolygonPoints.saveAsTextFile(OutputLocation);	
 		sc.close();
+	
 	}
+	
+	/*public static void writeFile(JavaRDD<Geometry> globalUnionPolygon) throws IOException{
+		String localIntermediateFile2 = "hdfs://master:54310/data/PolygonUnionIntermediateFile2";
+		String OutputLocation = "hdfs://master:54310/data/PolygonUnion";
+		File file = new File(localIntermediateFile2);
+
+
+		FileWriter fw = new FileWriter(file.getAbsoluteFile());
+		BufferedWriter bw = new BufferedWriter(fw); 
+		bw.write(globalUnionPolygon.toString());
+		bw.close();
+		BufferedReader br = null;
+		String sCurrentLine;
+
+		br = new BufferedReader(new FileReader(file));
+
+while ((sCurrentLine = br.readLine()) != null) {
+			
+			if(sCurrentLine.contains("POLYGON ((")){
+				sCurrentLine=sCurrentLine.replace("POLYGON ((", "");
+			}
+			if(sCurrentLine.contains("))")){
+				sCurrentLine=sCurrentLine.replace("))", "");
+			}
+			if(sCurrentLine.contains(", ")){
+				sCurrentLine=sCurrentLine.replace(", ","\n");
+			}
+			 
+			 if(sCurrentLine.contains(" ")){
+				sCurrentLine=sCurrentLine.replace(" ", ",");
+			}
+			
+		
+		
+		
+		
+	}*/
+
+	
 
 }
 
@@ -128,4 +180,5 @@ class GlobalUnionOperation implements Serializable,FlatMapFunction<Iterator<Geom
 		
 		return globalPolygons;
 	}
+
 }
