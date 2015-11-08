@@ -2,6 +2,7 @@ package com.CSE512.GeospatialOperation;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -24,7 +25,52 @@ public class ConvexHullOperation {
 	 * Computes the convex hull of all the geometries in this field. Call this
 	 * method once.
 	 */
-	public void computeConvexHull() {
+	@SuppressWarnings("unchecked")
+	public static ArrayList<Coordinate> prune(ArrayList<Coordinate> coords) {
+		Coordinate a = new Coordinate();
+		Coordinate b = new Coordinate();
+		Coordinate c = new Coordinate();
+		Coordinate d = new Coordinate();
+		boolean flag = true;
+		Double x1, x2, y1, y2;
+		for (Coordinate t : coords) {
+			if (flag) {
+				c.x = t.x;
+				c.y = t.y;
+				d.x = t.x;
+				d.y = t.y;
+				flag = false;
+			}
+			if (t.x - t.y >= a.x - a.y) {
+				a.x = t.x;
+				a.y = t.y;
+			}
+			if (t.x + t.y >= b.x + b.y) {
+				b.x = t.x;
+				b.y = t.y;
+			}
+			if (t.x + t.y <= c.x + c.y) {
+				c.x = t.x;
+				c.y = t.y;
+			}
+			if (t.x + t.y <= d.x + d.y) {
+				d.x = t.x;
+				d.y = t.y;
+			}
+		}
+		x1 = Math.max(c.x, d.x);
+		x2 = Math.min(a.x, b.x);
+		y1 = Math.max(a.y, d.y);
+		y2 = Math.min(b.y, c.y);
+		int l = coords.size();
+		for (int i = 0; i<l ; i++) {
+			Coordinate t = coords.get(i);
+			if (t.x>x2 || t.x<x1 || t.y>y2 || t.y<y1 ) {
+				coords.remove(i);
+			}
+		}
+		Collections.sort(coords);
+		return coords;
 	}
 
 	public static void main(String args[]) {
@@ -34,19 +80,19 @@ public class ConvexHullOperation {
 		JavaSparkContext sc = SContext.getJavaSparkContext();
 
 		JavaRDD<String> file = sc.textFile(InputLocation);
-		JavaRDD<Coordinate> chcords = file.mapPartitions(new FlatMapFunction<Iterator<String>, Coordinate>() {
+		JavaRDD<Points> chcords = file.mapPartitions(new FlatMapFunction<Iterator<String>, Points>() {
 			private static final long serialVersionUID = 11111L;
 
-			public Iterable<Coordinate> call(Iterator<String> s) throws Exception {
-				List<Coordinate> coords = new ArrayList<Coordinate>();
+			public Iterable<Points> call(Iterator<String> s) throws Exception {
+				ArrayList<Coordinate> coords = new ArrayList<Coordinate>();
 				while (s.hasNext()) {
 					String[] fields = s.next().split(",");
 					Coordinate coord = new Coordinate(Double.parseDouble(fields[0]), Double.parseDouble(fields[1]));
 					coords.add(coord);
 				}
-				ConvexHull ch = new ConvexHull(coords.toArray(new Coordinate[coords.size()]),
-						new GeometryFactory());
-				List<Coordinate> chcords = Arrays.asList(ch.getConvexHull().getCoordinates());
+				coords = prune(coords);
+				ConvexHull ch = new ConvexHull(coords.toArray(new Coordinate[coords.size()]), new GeometryFactory());
+				List<Points> chcords = Points.getPoints(Arrays.asList(ch.getConvexHull().getCoordinates()));
 				// sort coordinates, remove nan
 				return chcords;
 			}
