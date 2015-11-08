@@ -20,4 +20,8 @@ public class Points {
 		}
 		return p;
 	}
+	public String toString(){
+		return "("+x+","+y+")";
+	}
+
 }
