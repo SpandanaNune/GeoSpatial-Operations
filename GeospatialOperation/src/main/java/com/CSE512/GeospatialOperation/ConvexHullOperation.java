@@ -30,7 +30,7 @@ public class ConvexHullOperation {
 	public static void main(String args[]) {
 		String InputLocation = "hdfs://master:54310/data/ConvexHullTestData.csv";
 		String OutputLocation = "hdfs://master:54310/data/ConvexHull";
-		System.out.println("maja");
+		System.out.println("convex hull starting");
 		JavaSparkContext sc = SContext.getJavaSparkContext();
 
 		JavaRDD<String> file = sc.textFile(InputLocation);
@@ -38,20 +38,20 @@ public class ConvexHullOperation {
 			private static final long serialVersionUID = 11111L;
 
 			public Iterable<Coordinate> call(Iterator<String> s) throws Exception {
-				List<Coordinate> ActiveCoords = new ArrayList<Coordinate>();
+				List<Coordinate> coords = new ArrayList<Coordinate>();
 				while (s.hasNext()) {
 					String[] fields = s.next().split(",");
 					Coordinate coord = new Coordinate(Double.parseDouble(fields[0]), Double.parseDouble(fields[1]));
-					ActiveCoords.add(coord);
+					coords.add(coord);
 				}
-				// Find Convex Hull
-				ConvexHull ch = new ConvexHull(ActiveCoords.toArray(new Coordinate[ActiveCoords.size()]),
+				ConvexHull ch = new ConvexHull(coords.toArray(new Coordinate[coords.size()]),
 						new GeometryFactory());
 				List<Coordinate> chcords = Arrays.asList(ch.getConvexHull().getCoordinates());
+				// sort coordinates, remove nan
 				return chcords;
 			}
 		});
 		chcords.saveAsTextFile(OutputLocation);
-		System.out.println("maja pura hua");
+		System.out.println("convex hull ended");
 	}
 }
