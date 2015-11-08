@@ -26,7 +26,7 @@ public class PolygonUnionOperation {
 		String InputLocation = "hdfs://master:54310/data/PolygonUnionTestData.csv";
 		String OutputLocation = "hdfs://master:54310/data/PolygonUnion";
 		String localIntermediateFile = "hdfs://master:54310/data/PolygonUnionIntermediateFile";
-	JavaSparkContext sc = SContext.getJavaSparkContext();
+		JavaSparkContext sc = SContext.getJavaSparkContext();
 
 		//Read a text file from HDFS and return it as an RDD of Strings.
 		JavaRDD<String> inputFile1 = sc.textFile(InputLocation);
