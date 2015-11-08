@@ -17,6 +17,32 @@ import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.operation.union.CascadedPolygonUnion;
 
 
+public class PolygonUnionOperation {
+	
+	
+	public static void main(String args[]){
+		
+		String InputLocation = "hdfs://master:54310/data/PolygonUnionTestData.csv";
+		String OutputLocation = "hdfs://master:54310/data/PolygonUnion";
+		String localIntermediateFile = "hdfs://master:54310/data/PolygonUnionIntermediateFile";
+		JavaSparkContext sc = SContext.getJavaSparkContext();
+
+		//Read a text file from HDFS and return it as an RDD of Strings.
+		JavaRDD<String> inputFile1 = sc.textFile(InputLocation);
+		JavaRDD<Geometry> localUnionPolygon = inputFile1.mapPartitions(new LocalUnionOperation());
+		
+		localUnionPolygon.saveAsTextFile(localIntermediateFile);
+		
+		//Return a new RDD that has exactly 1 partition.
+		JavaRDD<Geometry> partionList = localUnionPolygon.repartition(1);
+		JavaRDD<Geometry> globalUnionPolygon = partionList.mapPartitions(new GlobalUnionOperation());
+	
+		globalUnionPolygon.saveAsTextFile(OutputLocation);
+		sc.close();
+	}
+
+}
+
 class LocalUnionOperation implements Serializable,FlatMapFunction<Iterator<String>, Geometry> 
 {
 	
@@ -99,30 +125,7 @@ class GlobalUnionOperation implements Serializable,FlatMapFunction<Iterator<Geom
 			Geometry newRectangles =  listOfGemoetryN;
 			globalPolygons.add(newRectangles);
 		}
+		
 		return globalPolygons;
 	}
-}
-
-public class PolygonUnionOperation {
-	
-	
-	public static void main(String args[]){
-		
-		SparkConf configuration = new SparkConf().setAppName("Geospatial Application").setMaster(args[0]);    
-		JavaSparkContext javasc = new JavaSparkContext(configuration);
-	    
-		//Read a text file from HDFS and return it as an RDD of Strings.
-		JavaRDD<String> inputFile1 = javasc.textFile(args[1]);
-		JavaRDD<Geometry> localUnionPolygon = inputFile1.mapPartitions(new LocalUnionOperation());
-		
-		localUnionPolygon.saveAsTextFile(args[2]);
-		
-		//Return a new RDD that has exactly 1 partition.
-		JavaRDD<Geometry> partionList = localUnionPolygon.repartition(1);
-		JavaRDD<Geometry> globalUnionPolygon = partionList.mapPartitions(new GlobalUnionOperation());
-		
-		globalUnionPolygon.saveAsTextFile(args[3]);
-		javasc.close();
-	}
-
 }
