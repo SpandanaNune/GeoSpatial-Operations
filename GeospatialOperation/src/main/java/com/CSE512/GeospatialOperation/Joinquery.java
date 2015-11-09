@@ -6,6 +6,9 @@ import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.Function;
 
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.Envelope;
+
 public class Joinquery {
 	public static void main(String[] args) {
 		String InputLocation1 = "hdfs://master:54310/data/JoinQueryInput1.csv";
@@ -30,6 +33,7 @@ public class Joinquery {
 					double r = Double.parseDouble(windowpoints[2]);
 					double q = Double.parseDouble(windowpoints[3]);
 					double s = Double.parseDouble(windowpoints[4]);
+					Envelope ewindow = new Envelope(p, q, r, s);
 
 					for (String part : target) {
 						String targetpoints[] = part.split(",");
@@ -39,19 +43,15 @@ public class Joinquery {
 							double y1 = Double.parseDouble(targetpoints[2]);
 							double x2 = Double.parseDouble(targetpoints[3]);
 							double y2 = Double.parseDouble(targetpoints[4]);
-
-							if (Math.max(p, q) >= Math.max(x1, x2) && Math.max(r, s) >= Math.max(y1, y2)
-									&& Math.min(p, q) <= Math.min(x1, x2) && Math.min(r, s) <= Math.min(y1, y2)) {
-
+							Envelope rect = new Envelope(x1, x2, y1, y2);
+							if (ewindow.contains(rect) || ewindow.intersects(rect)) {
 								output = output + "," + targetpoints[0];
-
 							}
 						} else {
 							double x1 = Double.parseDouble(targetpoints[1]);
 							double y1 = Double.parseDouble(targetpoints[2]);
-							if (((Math.max(p, q) >= x1) && (Math.max(r, s) >= y1))
-									&& ((Math.min(p, q) <= x1) && (Math.min(r, s) <= y1))) {
-
+							Coordinate c = new Coordinate(x1, y1);
+							if (ewindow.contains(c)) {
 								output = output + "," + targetpoints[0];
 							}
 						}
@@ -61,7 +61,7 @@ public class Joinquery {
 					return output;
 				}
 			}
-		});
+		}).repartition(1);
 
 		out.saveAsTextFile(OutputLocation);
 		javasc.stop();

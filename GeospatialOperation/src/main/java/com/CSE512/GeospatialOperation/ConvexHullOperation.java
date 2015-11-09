@@ -3,7 +3,6 @@ package com.CSE512.GeospatialOperation;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
@@ -13,6 +12,7 @@ import org.apache.spark.api.java.function.FlatMapFunction;
 
 import com.vividsolutions.jts.algorithm.ConvexHull;
 import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 
 /**
@@ -73,12 +73,7 @@ public class ConvexHullOperation {
 		return coords;
 	}
 
-	public static void main(String args[]) {
-		String InputLocation = "hdfs://master:54310/data/ConvexHullTestData.csv";
-		String OutputLocation = "hdfs://master:54310/data/ConvexHull";
-		System.out.println("convex hull starting");
-		JavaSparkContext sc = SContext.getJavaSparkContext();
-
+	public static Coordinate[] computeConvexHull(String InputLocation, String OutputLocation, JavaSparkContext sc) {
 		JavaRDD<String> file = sc.textFile(InputLocation);
 		JavaRDD<Coordinate> chcordsLocal = file.mapPartitions(new FlatMapFunction<Iterator<String>, Coordinate>() {
 			private static final long serialVersionUID = 11111L;
@@ -93,22 +88,20 @@ public class ConvexHullOperation {
 				coords = prune(coords);
 				ConvexHull chLocal = new ConvexHull(coords.toArray(new Coordinate[coords.size()]), new GeometryFactory());
 				List<Coordinate> chcords = Arrays.asList(chLocal.getConvexHull().getCoordinates());
-				return chcords;
+				return chcords;		
 			}
 		});
 		List<Coordinate> convexHullList = chcordsLocal.collect();
-//		Collections.sort(convexHullList);
-		ConvexHull chGlobal = new ConvexHull(convexHullList.toArray(new Coordinate[convexHullList.size()]), new GeometryFactory());
-		List<Coordinate> chcordsGlobal = Arrays.asList(chGlobal.getConvexHull().getCoordinates());
-//		HashSet<Coordinate> chcordsGlobalHashSet = new HashSet<Coordinate>();
-//		chcordsGlobalHashSet.addAll(chcordsGlobal);
-//		chcordsGlobal = new ArrayList<Coordinate>();
-//		chcordsGlobal.addAll(chcordsGlobalHashSet);
-		List<Points> pointsGlobal = Points.getPoints(chcordsGlobal);
-		Collections.sort(pointsGlobal);
-		pointsGlobal = Points.removeDuplicates(pointsGlobal);
-		JavaRDD<Points> pointsGlobalRDD = sc.parallelize(pointsGlobal).repartition(1);
-		pointsGlobalRDD.saveAsTextFile(OutputLocation);
-		System.out.println("convex hull ended");
+		convexHullList.add(convexHullList.get(0));
+		Coordinate[] c = convexHullList.toArray(new Coordinate[convexHullList.size()]);
+		return new GeometryFactory().createPolygon(c).convexHull().getCoordinates(); 
+	}
+
+	public static void main(String args[]) {
+		String InputLocation = "hdfs://master:54310/data/ConvexHullTestData.csv";
+		String OutputLocation = "hdfs://master:54310/data/ConvexHull";
+		JavaSparkContext sc = SContext.getJavaSparkContext();
+		Coordinate[] chcordsGlobal = ConvexHullOperation.computeConvexHull(InputLocation, OutputLocation, sc);
+		Points.sortAndRemoveDuplicates(chcordsGlobal, sc).saveAsTextFile(OutputLocation);
 	}
 }

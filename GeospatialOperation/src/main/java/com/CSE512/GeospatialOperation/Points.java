@@ -2,8 +2,13 @@ package com.CSE512.GeospatialOperation;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+
+import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.JavaSparkContext;
 
 import com.vividsolutions.jts.geom.Coordinate;
 
@@ -27,12 +32,14 @@ public class Points implements Serializable, Comparable<Points> {
 		return p;
 	}
 
-	public static List<Points> removeDuplicates(List<Points> p) {
-		HashSet<Points> h = new HashSet<Points>();
+	public static JavaRDD<Points> sortAndRemoveDuplicates(Coordinate[] c, JavaSparkContext sc) {
+		List<Coordinate> p = sc.parallelize(Arrays.asList(c)).repartition(1).collect();
+		HashSet<Coordinate> h = new HashSet<Coordinate>();
 		h.addAll(p);
-		p = new ArrayList<Points>();
+		p = new ArrayList<Coordinate>();
 		p.addAll(h);
-		return p;
+		Collections.sort(p);
+		return sc.parallelize(Points.getPoints(p)).repartition(1);
 	}
 
 	public String toString() {

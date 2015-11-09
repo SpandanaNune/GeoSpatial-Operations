@@ -69,10 +69,8 @@ class Pair implements Serializable {
 
 	public void calculateDistance() {
 		double xdistance = point2.x_coordinate - point1.x_coordinate;
-		double xsquare = Math.pow(xdistance, 2);
 		double ydistance = point2.y_coordinate - point1.y_coordinate;
-		double ysquare = Math.pow(ydistance, 2);
-		this.distance = Math.sqrt(xsquare + ysquare);
+		this.distance = Math.hypot(xdistance, ydistance);
 	}
 
 	public String toString() {
@@ -108,10 +106,8 @@ public class GeometryClosestPair {
 
 	public static double pairdistance(Point p1, Point p2) {
 		double xdistance = p2.x_coordinate - p1.x_coordinate;
-		double xsquare = Math.pow(xdistance, 2);
 		double ydistance = p2.y_coordinate - p1.y_coordinate;
-		double ysquare = Math.pow(ydistance, 2);
-		return Math.sqrt(xsquare + ysquare);
+		return Math.hypot(xdistance, ydistance);
 	}
 
 	public static Pair divideAndConquer(List<Point> Points) {
@@ -122,20 +118,21 @@ public class GeometryClosestPair {
 		return divideAndConquerRecurse(sorted_Xcoordinate, sorted_Ycoordinate);
 	}
 
-	// public static Pair bruteForceApproach(List<Point> Points){
-	// int NoOfPoints = Points.size();
-	// if (NoOfPoints < 2){
+	// public static Pair bruteForceApproach(List<Point> sorted_Xcoordinate){
+	// int NPoints = sorted_Xcoordinate.size();
+	// if (NPoints < 2){
 	// return null;
 	// }
-	// Pair closestPair = new Pair(Points.get(0), Points.get(1));
-	// if (NoOfPoints > 2)
+	// Pair closestPair = new Pair(sorted_Xcoordinate.get(0),
+	// sorted_Xcoordinate.get(1));
+	// if (NPoints > 2)
 	// {
-	// for (int i = 0; i < NoOfPoints - 1; i++)
+	// for (int i = 0; i < NPoints - 1; i++)
 	// {
-	// Point point1 = Points.get(i);
-	// for (int j = i + 1; j < NoOfPoints; j++)
+	// Point point1 = sorted_Xcoordinate.get(i);
+	// for (int j = i + 1; j < NPoints; j++)
 	// {
-	// Point point2 = Points.get(j);
+	// Point point2 = sorted_Xcoordinate.get(j);
 	// double distance = pairdistance(point1, point2);
 	// if (distance < closestPair.distance){
 	// closestPair.update(point1, point2, distance);
@@ -149,15 +146,15 @@ public class GeometryClosestPair {
 	private static Pair divideAndConquerRecurse(List<Point> sorted_Xcoordinate, List<Point> sorted_Ycoordinate) {
 		int NoOfPoints = sorted_Xcoordinate.size();
 		if (NoOfPoints <= 3) {
-			int No_Points = sorted_Xcoordinate.size();
-			if (No_Points < 2) {
+			int NPoints = sorted_Xcoordinate.size();
+			if (NPoints < 2) {
 				return null;
 			}
 			Pair closestPair = new Pair(sorted_Xcoordinate.get(0), sorted_Xcoordinate.get(1));
-			if (No_Points > 2) {
-				for (int i = 0; i < NoOfPoints - 1; i++) {
+			if (NPoints > 2) {
+				for (int i = 0; i < NPoints - 1; i++) {
 					Point point1 = sorted_Xcoordinate.get(i);
-					for (int j = i + 1; j < NoOfPoints; j++) {
+					for (int j = i + 1; j < NPoints; j++) {
 						Point point2 = sorted_Xcoordinate.get(j);
 						double distance = pairdistance(point1, point2);
 						if (distance < closestPair.distance) {
