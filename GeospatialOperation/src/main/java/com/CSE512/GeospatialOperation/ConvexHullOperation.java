@@ -12,7 +12,6 @@ import org.apache.spark.api.java.function.FlatMapFunction;
 
 import com.vividsolutions.jts.algorithm.ConvexHull;
 import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 
 /**
@@ -63,9 +62,9 @@ public class ConvexHullOperation {
 		x2 = Math.min(a.x, b.x);
 		y1 = Math.max(a.y, d.y);
 		y2 = Math.min(b.y, c.y);
-		for (int i = 0; i<coords.size(); i++) {
+		for (int i = 0; i < coords.size(); i++) {
 			Coordinate t = coords.get(i);
-			if ( (t.x>x1 && t.x<x2) && (t.y>y1 && t.y<y2)) {
+			if ((t.x > x1 && t.x < x2) && (t.y > y1 && t.y < y2)) {
 				coords.remove(i--);
 			}
 		}
@@ -86,15 +85,16 @@ public class ConvexHullOperation {
 					coords.add(coord);
 				}
 				coords = prune(coords);
-				ConvexHull chLocal = new ConvexHull(coords.toArray(new Coordinate[coords.size()]), new GeometryFactory());
+				ConvexHull chLocal = new ConvexHull(coords.toArray(new Coordinate[coords.size()]),
+						new GeometryFactory());
 				List<Coordinate> chcords = Arrays.asList(chLocal.getConvexHull().getCoordinates());
-				return chcords;		
+				return chcords;
 			}
 		});
 		List<Coordinate> convexHullList = chcordsLocal.collect();
 		convexHullList.add(convexHullList.get(0));
 		Coordinate[] c = convexHullList.toArray(new Coordinate[convexHullList.size()]);
-		return new GeometryFactory().createPolygon(c).convexHull().getCoordinates(); 
+		return new GeometryFactory().createPolygon(c).convexHull().getCoordinates();
 	}
 
 	public static void main(String args[]) {

@@ -32,6 +32,7 @@ public class Points implements Serializable, Comparable<Points> {
 		return p;
 	}
 
+	@SuppressWarnings("unchecked")
 	public static JavaRDD<Points> sortAndRemoveDuplicates(Coordinate[] c, JavaSparkContext sc) {
 		List<Coordinate> p = sc.parallelize(Arrays.asList(c)).repartition(1).collect();
 		HashSet<Coordinate> h = new HashSet<Coordinate>();
@@ -52,7 +53,7 @@ public class Points implements Serializable, Comparable<Points> {
 			Double y2 = p.y;
 			return y.compareTo(y2);
 		} else {
-			Double x= this.x;
+			Double x = this.x;
 			Double x2 = p.x;
 			return x.compareTo(x2);
 		}
@@ -60,10 +61,10 @@ public class Points implements Serializable, Comparable<Points> {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (obj == null){
+		if (obj == null) {
 			return false;
 		}
-		if (obj instanceof Points){
+		if (obj instanceof Points) {
 			Points p = (Points) obj;
 			return (this.x == p.x && this.y == p.y);
 		} else
