@@ -42,8 +42,8 @@ class Point implements Comparable<Point>, Serializable {
 	@Override
 	public boolean equals(Object o) {
 		if (o instanceof Point) {
-			Point compareTo = (Point) o;
-			return ((this.x_coordinate == compareTo.x_coordinate)) && ((this.y_coordinate == compareTo.y_coordinate));
+			Point compare = (Point) o;
+			return ((this.x_coordinate == compare.x_coordinate)) && ((this.y_coordinate == compare.y_coordinate));
 		}
 		return false;
 	}
@@ -68,9 +68,11 @@ class Pair implements Serializable {
 	}
 
 	public void calculateDistance() {
-		double xdistance = point2.x_coordinate - point1.x_coordinate;
-		double ydistance = point2.y_coordinate - point1.y_coordinate;
-		this.distance = Math.hypot(xdistance, ydistance);
+		  double xdistance = point2.x_coordinate - point1.x_coordinate;
+		  double xsquare = Math.pow(xdistance,2);
+		  double ydistance = point2.y_coordinate - point1.y_coordinate;
+		  double ysquare = Math.pow(ydistance,2);
+		  this.distance =   Math.sqrt(xsquare+ysquare); 
 	}
 
 	public String toString() {
@@ -83,9 +85,9 @@ public class GeometryClosestPair {
 	public static void sortByXcoordinate(List<Point> points) {
 		Collections.sort(points, new Comparator<Point>() {
 			public int compare(Point point1, Point point2) {
-				if (point1.x_coordinate < point2.y_coordinate)
+				if (point1.x_coordinate < point2.x_coordinate)
 					return -1;
-				if (point1.x_coordinate > point2.y_coordinate)
+				if (point1.x_coordinate > point2.x_coordinate)
 					return 1;
 				return 0;
 			}
@@ -105,9 +107,11 @@ public class GeometryClosestPair {
 	}
 
 	public static double pairdistance(Point p1, Point p2) {
-		double xdistance = p2.x_coordinate - p1.x_coordinate;
-		double ydistance = p2.y_coordinate - p1.y_coordinate;
-		return Math.hypot(xdistance, ydistance);
+		  double xdistance = p2.x_coordinate - p1.x_coordinate;
+		  double xsquare = Math.pow(xdistance,2);
+		  double ydistance = p2.y_coordinate - p1.y_coordinate;
+		  double ysquare = Math.pow(ydistance,2);
+		  return Math.sqrt(xsquare+ysquare); 
 	}
 
 	public static Pair divideAndConquer(List<Point> Points) {
@@ -118,53 +122,32 @@ public class GeometryClosestPair {
 		return divideAndConquerRecurse(sorted_Xcoordinate, sorted_Ycoordinate);
 	}
 
-	// public static Pair bruteForceApproach(List<Point> sorted_Xcoordinate){
-	// int NPoints = sorted_Xcoordinate.size();
-	// if (NPoints < 2){
-	// return null;
-	// }
-	// Pair closestPair = new Pair(sorted_Xcoordinate.get(0),
-	// sorted_Xcoordinate.get(1));
-	// if (NPoints > 2)
-	// {
-	// for (int i = 0; i < NPoints - 1; i++)
-	// {
-	// Point point1 = sorted_Xcoordinate.get(i);
-	// for (int j = i + 1; j < NPoints; j++)
-	// {
-	// Point point2 = sorted_Xcoordinate.get(j);
-	// double distance = pairdistance(point1, point2);
-	// if (distance < closestPair.distance){
-	// closestPair.update(point1, point2, distance);
-	// }
-	// }
-	// }
-	// }
-	// return closestPair;
-	// }
-
-	private static Pair divideAndConquerRecurse(List<Point> sorted_Xcoordinate, List<Point> sorted_Ycoordinate) {
-		int NoOfPoints = sorted_Xcoordinate.size();
-		if (NoOfPoints <= 3) {
-			int NPoints = sorted_Xcoordinate.size();
-			if (NPoints < 2) {
-				return null;
-			}
-			Pair closestPair = new Pair(sorted_Xcoordinate.get(0), sorted_Xcoordinate.get(1));
-			if (NPoints > 2) {
-				for (int i = 0; i < NPoints - 1; i++) {
-					Point point1 = sorted_Xcoordinate.get(i);
-					for (int j = i + 1; j < NPoints; j++) {
-						Point point2 = sorted_Xcoordinate.get(j);
-						double distance = pairdistance(point1, point2);
-						if (distance < closestPair.distance) {
-							closestPair.update(point1, point2, distance);
-						}
-					}
-				}
-			}
-			return closestPair;
-		}
+	
+	  private static Pair divideAndConquerRecurse(List<Point> sorted_Xcoordinate, List<Point> sorted_Ycoordinate){
+	    int NoOfPoints = sorted_Xcoordinate.size();
+	    if (NoOfPoints <= 3){
+	    	int NPoints = sorted_Xcoordinate.size();
+		    if (NPoints < 2){
+		      return null;
+		    }
+		    Pair closestPair = new Pair(sorted_Xcoordinate.get(0), sorted_Xcoordinate.get(1));
+		    if (NPoints > 2)
+		    {
+		      for (int i = 0; i < NPoints - 1; i++)
+		      {
+		        Point point1 = sorted_Xcoordinate.get(i);
+		        for (int j = i + 1; j < NPoints; j++)
+		        {
+		          Point point2 = sorted_Xcoordinate.get(j);
+		          double distance = pairdistance(point1, point2);
+		          if (distance < closestPair.distance){
+		        	  closestPair.update(point1, point2, distance);
+		          }
+		        }
+		      }
+		    }
+	      return closestPair;
+	    }
 
 		int dPoint = NoOfPoints >>> 1;
 		List<Point> Part1 = sorted_Xcoordinate.subList(0, dPoint);
@@ -253,16 +236,16 @@ public class GeometryClosestPair {
 		JavaRDD<Point> FinalList = ReduceList.mapPartitions(new FlatMapFunction<Iterator<Point>, Point>() {
 			private static final long serialVersionUID = 1L;
 
-			public Iterable<Point> call(Iterator<Point> givListIter) {
+			public Iterable<Point> call(Iterator<Point> Iter) {
 				List<Point> points = new ArrayList<Point>();
-				while (givListIter.hasNext()) {
-					Point p = givListIter.next();
+				while (Iter.hasNext()) {
+					Point p = Iter.next();
 					points.add(p);
 				}
-				Pair globalClosestPair = divideAndConquer(points);
+				Pair global_ClosestPair = divideAndConquer(points);
 				List<Point> finalPoints = new ArrayList<Point>();
-				finalPoints.add(globalClosestPair.point1);
-				finalPoints.add(globalClosestPair.point2);
+				finalPoints.add(global_ClosestPair.point1);
+				finalPoints.add(global_ClosestPair.point2);
 				Collections.sort(finalPoints);
 				return finalPoints;
 			}
