@@ -14,56 +14,59 @@ import scala.Tuple2;
 public class RangeQuery {
 
 	public static void main(String[] args) {
-		JavaSparkContext javasc = SContext.getJavaSparkContext();
 		String InputLocation1 = "hdfs://master:54310/data/RangeQueryTestData.csv";
 		String InputLocation2 = "hdfs://master:54310/data/RangeQueryRectangle.csv";
 		String OutputLocation = "hdfs://master:54310/data/RangeQuery";
-		JavaRDD<String> inputFile1 = javasc.textFile(InputLocation1);
-		JavaRDD<String> inputFile2 = javasc.textFile(InputLocation2);
+
+		JavaSparkContext sc = SContext.getJavaSparkContext();
+		JavaRDD<String> inputFile2 = sc.textFile(InputLocation1); // points
+		JavaRDD<String> inputFile1 = sc.textFile(InputLocation2); // query rectangle
+
 		String val = inputFile1.first();
-		String[] windowpoints = val.split(",");
-		final Double[] querywindow = new Double[4];
-		for (int i = 0; i < 4; i++) {
-			querywindow[i] = Double.parseDouble(windowpoints[i]);
+		String[] windowPoints = val.split(",");
+		final Double[] queryWindow = new Double[4];
+		for (int i = 0; i < queryWindow.length; i++) {
+			queryWindow[i] = Double.parseDouble(windowPoints[i]);
 		}
 
-		Broadcast<Double[]> broadcast = javasc.broadcast(querywindow);
+		Broadcast<Double[]> broadcast = sc.broadcast(queryWindow);
 		final Double[] value = broadcast.value();
 
-		JavaPairRDD<String, String> enclosed = inputFile2.mapToPair(new PairFunction<String, String, String>() {
+		JavaPairRDD<String, String> result = inputFile2.mapToPair(new PairFunction<String, String, String>() {
 
 			private static final long serialVersionUID = 1L;
 
 			public Tuple2<String, String> call(String data) {
 				String parts[] = data.split(",");
-				double x1 = Double.parseDouble(parts[0]);
-				double y1 = Double.parseDouble(parts[1]);
-				double x2 = Double.parseDouble(parts[2]);
-				double y2 = Double.parseDouble(parts[3]);
+				double id = Double.parseDouble(parts[0]);
+				double x = Double.parseDouble(parts[1]);
+				double y = Double.parseDouble(parts[2]);
+				
+				if ((value[0] <= x) && (value[1] <= y) && (value[2] >= x) && (value[3] >= y)) {
 
-				if ((Math.max(value[0], value[2]) > x1) && (Math.max(value[1], value[3]) > y1)
-						&& (Math.min(value[0], value[2]) < x1) && (Math.min(value[1], value[3]) < y1))
-					return new Tuple2<String, String>(x1 + "," + y1 + "," + x2 + "," + y2, "");
+					return new Tuple2<String, String>(String.valueOf(id), "null");
+				}
+
 				else
 					return new Tuple2<String, String>("NULL", "b");
-
 			}
 		});
 
-		String data = "";
+		String finalIDs = "";
 
-		List<Tuple2<String, String>> output = enclosed.collect();
+		List<Tuple2<String, String>> output = result.collect();
 		List<String> list = new ArrayList<String>();
 		for (Tuple2<?, ?> tuple : output) {
 			if (!tuple._1().toString().contains("NULL")) {
-				data += tuple._1() + "\n";
-				list.add(tuple._1().toString());
+				finalIDs += tuple._1() + "\n";
+				// list.add(tuple._1().toString());
+				
 			}
 		}
-
-		JavaRDD<String> out = javasc.parallelize(list).repartition(1);
+		list.add(finalIDs);
+		JavaRDD<String> out = sc.parallelize(list).repartition(1);
 		out.saveAsTextFile(OutputLocation);
-		javasc.close();
+		sc.close();
 
 	}
 

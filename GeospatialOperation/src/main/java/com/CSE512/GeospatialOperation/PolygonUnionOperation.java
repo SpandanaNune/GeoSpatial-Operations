@@ -21,29 +21,29 @@ public class PolygonUnionOperation {
 
 	public static void main(String args[]) throws IOException {
 
-		String InputLocation = "hdfs://master:54310/data/PolygonUnionTestData.csv";
-		String OutputLocation = "hdfs://master:54310/data/PolygonUnion";
-		String localIntermediateFile = "hdfs://master:54310/data/PolygonUnionIntermediateFile";
+		String InputLocation = "hdfs://master:54310/data/UnionQueryTestData.csv";
+		String OutputLocation = "hdfs://master:54310/data/Union";
+		String localIntermediateFile = "hdfs://master:54310/data/UnionIntermediateFile";
 		JavaSparkContext sc = SContext.getJavaSparkContext();
 
 		// Read a text file from HDFS and return it as an RDD of Strings.
 		JavaRDD<String> inputFile1 = sc.textFile(InputLocation);
 		JavaRDD<Geometry> localUnionPolygon = inputFile1.mapPartitions(new LocalUnionOperation());
 
-		localUnionPolygon.saveAsTextFile(localIntermediateFile);
+		localUnionPolygon.distinct().saveAsTextFile(localIntermediateFile);
 
 		// Return a new RDD that has exactly 1 partition.
-		JavaRDD<Geometry> partionList = localUnionPolygon.repartition(1);
+		JavaRDD<Geometry> partionList = localUnionPolygon.distinct().repartition(1);
 		JavaRDD<Geometry> globalUnionPolygon = partionList.mapPartitions(new GlobalUnionOperation());
-		JavaRDD<Geometry> globalUnionPolygonDuplicate = globalUnionPolygon.distinct();
-		List<Geometry> globalUnionPolygonList = globalUnionPolygonDuplicate.collect();
+		
+		List<Geometry> globalUnionPolygonList = globalUnionPolygon.collect();
 		List<Points> globalUnionPolygonPointsList = new ArrayList<Points>();
 		for (int i = 0; i < globalUnionPolygonList.size(); i++) {
 			globalUnionPolygonPointsList.addAll(Points.getPoints(Arrays.asList(globalUnionPolygonList.get(0)
 					.getCoordinates())));
 		}
 		JavaRDD<Points> globalUnionPolygonPoints = sc.parallelize(globalUnionPolygonPointsList).repartition(1);
-		globalUnionPolygonPoints.saveAsTextFile(OutputLocation);
+		globalUnionPolygonPoints.distinct().saveAsTextFile(OutputLocation);
 		sc.close();
 
 	}

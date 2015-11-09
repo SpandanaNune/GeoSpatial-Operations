@@ -3,6 +3,7 @@ package com.CSE512.GeospatialOperation;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
@@ -41,19 +42,19 @@ public class ConvexHullOperation {
 				d.y = t.y;
 				flag = false;
 			}
-			if (t.x - t.y >= a.x - a.y) {
+			if (t.x - t.y > a.x - a.y) {
 				a.x = t.x;
 				a.y = t.y;
 			}
-			if (t.x + t.y >= b.x + b.y) {
+			if (t.x + t.y > b.x + b.y) {
 				b.x = t.x;
 				b.y = t.y;
 			}
-			if (t.x + t.y <= c.x + c.y) {
+			if (t.x + t.y < c.x + c.y) {
 				c.x = t.x;
 				c.y = t.y;
 			}
-			if (t.x + t.y <= d.x + d.y) {
+			if (t.x + t.y < d.x + d.y) {
 				d.x = t.x;
 				d.y = t.y;
 			}
@@ -79,10 +80,10 @@ public class ConvexHullOperation {
 		JavaSparkContext sc = SContext.getJavaSparkContext();
 
 		JavaRDD<String> file = sc.textFile(InputLocation);
-		JavaRDD<Points> chcords = file.mapPartitions(new FlatMapFunction<Iterator<String>, Points>() {
+		JavaRDD<Coordinate> chcordsLocal = file.mapPartitions(new FlatMapFunction<Iterator<String>, Coordinate>() {
 			private static final long serialVersionUID = 11111L;
 
-			public Iterable<Points> call(Iterator<String> s) throws Exception {
+			public Iterable<Coordinate> call(Iterator<String> s) throws Exception {
 				ArrayList<Coordinate> coords = new ArrayList<Coordinate>();
 				while (s.hasNext()) {
 					String[] fields = s.next().split(",");
@@ -90,14 +91,24 @@ public class ConvexHullOperation {
 					coords.add(coord);
 				}
 				coords = prune(coords);
-				ConvexHull ch = new ConvexHull(coords.toArray(new Coordinate[coords.size()]), new GeometryFactory());
-				List<Points> chcords = Points.getPoints(Arrays.asList(ch.getConvexHull().getCoordinates()));
+				ConvexHull chLocal = new ConvexHull(coords.toArray(new Coordinate[coords.size()]), new GeometryFactory());
+				List<Coordinate> chcords = Arrays.asList(chLocal.getConvexHull().getCoordinates());
 				return chcords;
 			}
 		});
-		//List<Points> convexHullList = chcords.collect();
-		chcords = sc.parallelize(chcords.collect()).repartition(1);
-		chcords.saveAsTextFile(OutputLocation);
+		List<Coordinate> convexHullList = chcordsLocal.collect();
+//		Collections.sort(convexHullList);
+		ConvexHull chGlobal = new ConvexHull(convexHullList.toArray(new Coordinate[convexHullList.size()]), new GeometryFactory());
+		List<Coordinate> chcordsGlobal = Arrays.asList(chGlobal.getConvexHull().getCoordinates());
+//		HashSet<Coordinate> chcordsGlobalHashSet = new HashSet<Coordinate>();
+//		chcordsGlobalHashSet.addAll(chcordsGlobal);
+//		chcordsGlobal = new ArrayList<Coordinate>();
+//		chcordsGlobal.addAll(chcordsGlobalHashSet);
+		List<Points> pointsGlobal = Points.getPoints(chcordsGlobal);
+		Collections.sort(pointsGlobal);
+		pointsGlobal = Points.removeDuplicates(pointsGlobal);
+		JavaRDD<Points> pointsGlobalRDD = sc.parallelize(pointsGlobal).repartition(1);
+		pointsGlobalRDD.saveAsTextFile(OutputLocation);
 		System.out.println("convex hull ended");
 	}
 }
