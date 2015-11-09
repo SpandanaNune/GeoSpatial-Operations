@@ -62,11 +62,10 @@ public class ConvexHullOperation {
 		x2 = Math.min(a.x, b.x);
 		y1 = Math.max(a.y, d.y);
 		y2 = Math.min(b.y, c.y);
-		int l = coords.size();
-		for (int i = 0; i<l ; i++) {
+		for (int i = 0; i<coords.size(); i++) {
 			Coordinate t = coords.get(i);
-			if (t.x>x2 || t.x<x1 || t.y>y2 || t.y<y1 ) {
-				coords.remove(i);
+			if ( (t.x>x1 && t.x<x2) && (t.y>y1 && t.y<y2)) {
+				coords.remove(i--);
 			}
 		}
 		Collections.sort(coords);
@@ -93,10 +92,11 @@ public class ConvexHullOperation {
 				coords = prune(coords);
 				ConvexHull ch = new ConvexHull(coords.toArray(new Coordinate[coords.size()]), new GeometryFactory());
 				List<Points> chcords = Points.getPoints(Arrays.asList(ch.getConvexHull().getCoordinates()));
-				// sort coordinates, remove nan
 				return chcords;
 			}
 		});
+		//List<Points> convexHullList = chcords.collect();
+		chcords = sc.parallelize(chcords.collect()).repartition(1);
 		chcords.saveAsTextFile(OutputLocation);
 		System.out.println("convex hull ended");
 	}

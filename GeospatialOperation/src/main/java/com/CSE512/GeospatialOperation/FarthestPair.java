@@ -44,8 +44,10 @@ class ConvexHullCalculation implements FlatMapFunction<Iterator<String>, Coordin
 
 public class FarthestPair {
 	public static void main(String[] args) {
+		String InputLocation = "hdfs://master:54310/data/FarthestPairandClosestPairTestData.csv";
+		String OutputLocation = "hdfs://master:54310/data/FarthestPair";
 		JavaSparkContext sc = SContext.getJavaSparkContext();
-		JavaRDD<String> lines = sc.textFile(args[1]);
+		JavaRDD<String> lines = sc.textFile(InputLocation);
 		JavaRDD<Coordinate> listOfCoordinates = lines.mapPartitions(new ConvexHullCalculation());
 
 		List<Coordinate> convexHullList = listOfCoordinates.collect();
@@ -74,7 +76,7 @@ public class FarthestPair {
 		List<Coordinate> points = new ArrayList<Coordinate>();
 		points.add(point1); points.add(point2);
 		JavaRDD<Coordinate> farthestPair = sc.parallelize(points).repartition(1);
-		farthestPair.saveAsTextFile(args[3]);
+		farthestPair.saveAsTextFile(OutputLocation);
 		sc.close();
 	}
 }

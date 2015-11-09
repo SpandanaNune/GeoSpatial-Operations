@@ -1,11 +1,16 @@
 package com.CSE512.GeospatialOperation;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 import com.vividsolutions.jts.geom.Coordinate;
 
-public class Points {
+public class Points implements Serializable{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	public double x, y;
 
 	public Points(double x, double y) {
@@ -21,7 +26,7 @@ public class Points {
 		return p;
 	}
 	public String toString(){
-		return "("+x+","+y+")";
+		return x+","+y;
 	}
 
 }

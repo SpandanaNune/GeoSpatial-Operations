@@ -33,7 +33,7 @@ class Point implements Comparable<Point>,Serializable
 		}
 	}
 	public String toString(){
-		return "("+xco+","+yco+")";
+		return xco+","+yco;
 	}
 	@Override
 	public boolean equals(Object o)
