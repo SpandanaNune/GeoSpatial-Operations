@@ -1,4 +1,4 @@
-package com.CSE512.GeospatialOperation;
+package edu.asu.cse512;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Iterator;
 
+import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.*;
 import org.apache.spark.api.java.function.FlatMapFunction;
 
@@ -22,9 +23,6 @@ import com.vividsolutions.jts.geom.GeometryFactory;
 
 class ConvexHullCalculation implements FlatMapFunction<Iterator<String>, Coordinate>, Serializable {
 	
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 
 	public Iterable<Coordinate> call(Iterator<String> s) throws Exception {
@@ -34,7 +32,7 @@ class ConvexHullCalculation implements FlatMapFunction<Iterator<String>, Coordin
 			Coordinate coord = new Coordinate(Double.parseDouble(fields[0]), Double.parseDouble(fields[1]));
 			coords.add(coord);
 		}
-		coords = ConvexHullOperation.prune(coords);
+		coords = convexHull.prune(coords);
 		ConvexHull ch = new ConvexHull(coords.toArray(new Coordinate[coords.size()]), new GeometryFactory());
 		Iterable<Coordinate> chcords = Arrays.asList(ch.getConvexHull().getCoordinates());
 
@@ -44,9 +42,10 @@ class ConvexHullCalculation implements FlatMapFunction<Iterator<String>, Coordin
 
 public class FarthestPair {
 	public static void main(String[] args) {
-		String InputLocation = "hdfs://master:54310/data/FarthestPairandClosestPairTestData.csv";
-		String OutputLocation = "hdfs://master:54310/data/FarthestPair";
-		JavaSparkContext sc = SContext.getJavaSparkContext();
+		String InputLocation = args[0];
+		String OutputLocation = args[1];
+		SparkConf  conf  =  new  SparkConf (). setAppName ( "Group25-FarthestPair" );  
+		JavaSparkContext  sc  =  new  JavaSparkContext ( conf ); 
 		JavaRDD<String> lines = sc.textFile(InputLocation);
 		JavaRDD<Coordinate> listOfCoordinates = lines.mapPartitions(new ConvexHullCalculation());
 

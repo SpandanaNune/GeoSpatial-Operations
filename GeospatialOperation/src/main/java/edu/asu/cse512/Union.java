@@ -1,6 +1,10 @@
-package com.CSE512.GeospatialOperation;
+package edu.asu.cse512;
 
+/**
+ * @author Sayali Gole
+ */
 import java.io.IOException;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -8,6 +12,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.FlatMapFunction;
@@ -17,20 +22,18 @@ import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.operation.union.CascadedPolygonUnion;
 
-public class PolygonUnionOperation {
+public class Union {
 
 	public static void main(String args[]) throws IOException {
 
-		String InputLocation = "hdfs://master:54310/data/UnionQueryTestData.csv";
-		String OutputLocation = "hdfs://master:54310/data/Union";
-		String localIntermediateFile = "hdfs://master:54310/data/UnionIntermediateFile";
-		JavaSparkContext sc = SContext.getJavaSparkContext();
+		String InputLocation = args[0];
+		String OutputLocation = args[1];
+		SparkConf  conf  =  new  SparkConf (). setAppName ( "Group25-PolygonUnion" );  
+		JavaSparkContext  sc  =  new  JavaSparkContext ( conf ); 
 
 		// Read a text file from HDFS and return it as an RDD of Strings.
 		JavaRDD<String> inputFile1 = sc.textFile(InputLocation);
 		JavaRDD<Geometry> localUnionPolygon = inputFile1.mapPartitions(new LocalUnionOperation());
-
-		localUnionPolygon.distinct().saveAsTextFile(localIntermediateFile);
 
 		// Return a new RDD that has exactly 1 partition.
 		JavaRDD<Geometry> partionList = localUnionPolygon.distinct().repartition(1);
@@ -48,38 +51,6 @@ public class PolygonUnionOperation {
 		sc.close();
 
 	}
-
-	/*
-	 * public static void writeFile(JavaRDD<Geometry> globalUnionPolygon) throws
-	 * IOException{ String localIntermediateFile2 =
-	 * "hdfs://master:54310/data/PolygonUnionIntermediateFile2"; String
-	 * OutputLocation = "hdfs://master:54310/data/PolygonUnion"; File file = new
-	 * File(localIntermediateFile2);
-	 * 
-	 * 
-	 * FileWriter fw = new FileWriter(file.getAbsoluteFile()); BufferedWriter bw
-	 * = new BufferedWriter(fw); bw.write(globalUnionPolygon.toString());
-	 * bw.close(); BufferedReader br = null; String sCurrentLine;
-	 * 
-	 * br = new BufferedReader(new FileReader(file));
-	 * 
-	 * while ((sCurrentLine = br.readLine()) != null) {
-	 * 
-	 * if(sCurrentLine.contains("POLYGON ((")){
-	 * sCurrentLine=sCurrentLine.replace("POLYGON ((", ""); }
-	 * if(sCurrentLine.contains("))")){ sCurrentLine=sCurrentLine.replace("))",
-	 * ""); } if(sCurrentLine.contains(", ")){
-	 * sCurrentLine=sCurrentLine.replace(", ","\n"); }
-	 * 
-	 * if(sCurrentLine.contains(" ")){ sCurrentLine=sCurrentLine.replace(" ",
-	 * ","); }
-	 * 
-	 * 
-	 * 
-	 * 
-	 * 
-	 * }
-	 */
 
 }
 

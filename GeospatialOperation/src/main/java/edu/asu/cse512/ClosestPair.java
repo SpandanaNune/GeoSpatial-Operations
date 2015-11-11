@@ -1,4 +1,4 @@
-package com.CSE512.GeospatialOperation;
+package edu.asu.cse512;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -8,6 +8,7 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.FlatMapFunction;
@@ -17,37 +18,6 @@ import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 
-//class Point implements Comparable<Point>, Serializable {
-//
-//	private static final long serialVersionUID = 1L;
-//	public final double x_coordinate, y_coordinate;
-//
-//	public Point(double x, double y) {
-//		this.x_coordinate = x;
-//		this.y_coordinate = y;
-//	}
-//
-//	public int compareTo(Point p) {
-//		if (this.x_coordinate == p.x_coordinate) {
-//			return (int) (this.y_coordinate - p.y_coordinate);
-//		} else {
-//			return (int) (this.x_coordinate - p.y_coordinate);
-//		}
-//	}
-//
-//	public String toString() {
-//		return x_coordinate + "," + y_coordinate;
-//	}
-//
-//	@Override
-//	public boolean equals(Object o) {
-//		if (o instanceof Point) {
-//			Point compare = (Point) o;
-//			return ((this.x_coordinate == compare.x_coordinate)) && ((this.y_coordinate == compare.y_coordinate));
-//		}
-//		return false;
-//	}
-//}
 
 class Pair implements Serializable {
 	private static final long serialVersionUID = 1L;
@@ -80,7 +50,7 @@ class Pair implements Serializable {
 	}
 }
 
-public class GeometryClosestPair {
+public class ClosestPair {
 
 	public static void sortByXcoordinate(List<Points> Points) {
 		Collections.sort(Points, new Comparator<Points>() {
@@ -186,11 +156,10 @@ public class GeometryClosestPair {
 	}
 
 	public static void main(String[] args) {
-		String InputLocation = "hdfs://master:54310/data/ClosestPairTestData.csv";// args[0];
-		String OutputLocation = "hdfs://master:54310/data/ClosestPair";// args[1];
-		// String localIntermediateFile =
-		// "hdfs://master:54310/data/ClosestPairIntermediateFile";
-		JavaSparkContext sc = SContext.getJavaSparkContext();
+		String InputLocation =  args[0];
+		String OutputLocation = args[1];
+		SparkConf  conf  =  new  SparkConf (). setAppName ( "Group25-ClosestPair" );  
+		JavaSparkContext  sc  =  new  JavaSparkContext ( conf ); 
 		JavaRDD<String> lines = sc.textFile(InputLocation);
 		JavaRDD<Points> length = lines.mapPartitions(new FlatMapFunction<Iterator<String>, Points>() {
 			private static final long serialVersionUID = 1L;

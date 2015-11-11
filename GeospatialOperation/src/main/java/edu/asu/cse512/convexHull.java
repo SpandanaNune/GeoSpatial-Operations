@@ -1,8 +1,5 @@
-package com.CSE512.GeospatialOperation;
+package edu.asu.cse512;
 
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -10,10 +7,10 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.FlatMapFunction;
-import org.apache.spark.api.java.function.Function;
 
 import com.vividsolutions.jts.algorithm.ConvexHull;
 import com.vividsolutions.jts.geom.Coordinate;
@@ -25,7 +22,7 @@ import com.vividsolutions.jts.geom.GeometryFactory;
  * @author Kulvir Gahlawat
  *
  */
-public class ConvexHullOperation {
+public class convexHull {
 	/**
 	 * Computes the convex hull of all the geometries in this field. Call this
 	 * method once.
@@ -78,9 +75,10 @@ public class ConvexHullOperation {
 	}
 
 	public static void main(String args[]) {
-		String InputLocation = "hdfs://master:54310/data/ConvexHullTestData.csv";
-		String OutputLocation = "hdfs://master:54310/data/ConvexHull";
-		JavaSparkContext sc = SContext.getJavaSparkContext();
+		String InputLocation = args[0];
+		String OutputLocation = args[1];
+		SparkConf  conf  =  new  SparkConf (). setAppName ( "Group25-convexHull" );  
+		JavaSparkContext  sc  =  new  JavaSparkContext ( conf ); 
 		JavaRDD<String> file = sc.textFile(InputLocation);
 		JavaRDD<Coordinate> chcords = file.mapPartitions(new FlatMapFunction<Iterator<String>, Coordinate>() {
 			private static final long serialVersionUID = 11111L;
@@ -109,5 +107,6 @@ public class ConvexHullOperation {
 			}
 		});
 		chcords.saveAsTextFile(OutputLocation);
+		sc.close();
 	}
 }

@@ -1,4 +1,4 @@
-package com.CSE512.GeospatialOperation;
+/*package edu.asu.cse512;
 
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
@@ -21,3 +21,4 @@ public class SContext {
 		return sc;
 	}
 }
+*/

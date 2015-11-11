@@ -1,7 +1,8 @@
-package com.CSE512.GeospatialOperation;
+package edu.asu.cse512;
 
 import java.util.List;
 
+import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.Function;
@@ -9,15 +10,16 @@ import org.apache.spark.api.java.function.Function;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Envelope;
 
-public class Joinquery {
+public class Join {
 	public static void main(String[] args) {
 		String InputLocation1 = "hdfs://master:54310/data/JoinQueryInput1.csv";
 		String InputLocation2 = "hdfs://master:54310/data/JoinQueryInput2.csv";
 		String InputLocation3 = "hdfs://master:54310/data/JoinQueryInput3.csv";
 		String OutputLocation = "hdfs://master:54310/data/JoinQuery";
-		JavaSparkContext javasc = SContext.getJavaSparkContext();
-		JavaRDD<String> inputFile1 = javasc.textFile(InputLocation1);
-		JavaRDD<String> inputFile2 = javasc.textFile(InputLocation2);
+		SparkConf  conf  =  new  SparkConf (). setAppName ( "Group25-JoinQuery" );  
+		JavaSparkContext  sc  =  new  JavaSparkContext ( conf ); 
+		JavaRDD<String> inputFile1 = sc.textFile(InputLocation1);
+		JavaRDD<String> inputFile2 = sc.textFile(InputLocation2);
 		final List<String> target = inputFile1.collect();
 
 		JavaRDD<String> out = inputFile2.map(new Function<String, String>() {
@@ -64,7 +66,7 @@ public class Joinquery {
 		}).repartition(1);
 
 		out.saveAsTextFile(OutputLocation);
-		javasc.stop();
-		javasc.close();
+		sc.stop();
+		sc.close();
 	}
 }
