@@ -35,14 +35,15 @@ public class PolygonUnionOperation {
 		// Return a new RDD that has exactly 1 partition.
 		JavaRDD<Geometry> partionList = localUnionPolygon.distinct().repartition(1);
 		JavaRDD<Geometry> globalUnionPolygon = partionList.mapPartitions(new GlobalUnionOperation());
-		
+
 		List<Geometry> globalUnionPolygonList = globalUnionPolygon.collect();
-		List<Points> globalUnionPolygonPointsList = new ArrayList<Points>();
+		List<Coordinate> globalUnionPolygonCoordinateList = new ArrayList<Coordinate>();
 		for (int i = 0; i < globalUnionPolygonList.size(); i++) {
-			globalUnionPolygonPointsList.addAll(Points.getPoints(Arrays.asList(globalUnionPolygonList.get(0)
-					.getCoordinates())));
+			globalUnionPolygonCoordinateList.addAll(Arrays.asList(globalUnionPolygonList.get(i).getCoordinates()));
 		}
-		JavaRDD<Points> globalUnionPolygonPoints = sc.parallelize(globalUnionPolygonPointsList).repartition(1);
+
+		JavaRDD<Points> globalUnionPolygonPoints = Points.sortAndRemoveDuplicates(
+				globalUnionPolygonCoordinateList.toArray(new Coordinate[globalUnionPolygonCoordinateList.size()]), sc);
 		globalUnionPolygonPoints.distinct().saveAsTextFile(OutputLocation);
 		sc.close();
 
