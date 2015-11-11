@@ -72,7 +72,7 @@ public class ConvexHullOperation {
 		return coords;
 	}
 
-	public static Coordinate[] computeConvexHull(String InputLocation, String OutputLocation, JavaSparkContext sc) {
+	public static Coordinate[] computeConvexHull(String InputLocation, JavaSparkContext sc) {
 		JavaRDD<String> file = sc.textFile(InputLocation);
 		JavaRDD<Coordinate> chcordsLocal = file.mapPartitions(new FlatMapFunction<Iterator<String>, Coordinate>() {
 			private static final long serialVersionUID = 11111L;
@@ -101,7 +101,7 @@ public class ConvexHullOperation {
 		String InputLocation = "hdfs://master:54310/data/ConvexHullTestData.csv";
 		String OutputLocation = "hdfs://master:54310/data/ConvexHull";
 		JavaSparkContext sc = SContext.getJavaSparkContext();
-		Coordinate[] chcordsGlobal = ConvexHullOperation.computeConvexHull(InputLocation, OutputLocation, sc);
+		Coordinate[] chcordsGlobal = ConvexHullOperation.computeConvexHull(InputLocation, sc);
 		Points.sortAndRemoveDuplicates(chcordsGlobal, sc).saveAsTextFile(OutputLocation);
 	}
 }
